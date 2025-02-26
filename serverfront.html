@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Utilisateurs</title>
+</head>
+<body>
+    <h1>Gestion des Utilisateurs</h1>
+    <button onclick="addUser()">Ajouter un utilisateur</button>
+    <ul id="users-list"></ul>
+
+    <script>
+        const apiUrl = "http://192.168.64.175:8000/users";
+
+        // Récupérer et afficher les utilisateurs
+        function fetchUsers() {
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(users => {
+                    const usersList = document.getElementById("users-list");
+                    usersList.innerHTML = "";
+                    users.forEach(user => {
+                        const li = document.createElement("li");
+                        li.innerHTML = `
+                            ${user.equipe} - Classement: ${user.classement}
+                            <button onclick="updateClassement(${user.id})">Modifier Classement</button>
+                        `;
+                        usersList.appendChild(li);
+                    });
+                })
+                .catch(error => console.error("Erreur lors de la récupération des utilisateurs :", error));
+        }
+
+        // Ajouter un utilisateur
+        function addUser() {
+            fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ equipe: "Equipe 1", classement: 1 })
+            })
+            .then(() => {
+                alert("Utilisateur ajouté !");
+                fetchUsers();
+            })
+            .catch(error => console.error("Erreur lors de l'ajout de l'utilisateur :", error));
+        }
+
+        // Modifier un classement
+        function updateClassement(id) {
+            fetch(`${apiUrl}/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ classement: 2 })
+            })
+            .then(() => {
+                alert("Classement mis à jour !");
+                fetchUsers();
+            })
+            .catch(error => console.error("Erreur lors de la mise à jour du classement :", error));
+        }
+
+        // Charger les utilisateurs au chargement de la page
+        document.addEventListener("DOMContentLoaded", fetchUsers);
+    </script>
+    <script src='app.js'></script>
+</body>
+</html>

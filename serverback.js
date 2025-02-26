@@ -1,10 +1,14 @@
 //Déclaration de constantes & des paramètres de travail
 const dotenv = require('dotenv').config();
 const express = require('express');
-const cors = require();
-const mysql = require();
+const cors = require('cors');
+const mysql = require('mysql');
 const port = 8000; 
-const app= express();
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
 
 //Route à empreinter dans le navigateur
 app.get('/', (req, res) => {
@@ -56,3 +60,11 @@ app.put('/users/:id', (req, res) => {
     });
 });
 
+//supprimer les donnees de la table
+app.delete('/users/:id', (req, res) => {
+    let id = req.params.id;
+    bddConnection.query('DELETE FROM users WHERE id = ?', id, function (err, rows) {
+        if (err) throw err;
+        res.send('Utilisateur supprimé de la base de données');
+    });
+});

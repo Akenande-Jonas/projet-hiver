@@ -1,14 +1,10 @@
 //Déclaration de constantes & des paramètres de travail
 const dotenv = require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const mysql = require('mysql');
+const cors = require();
+const mysql = require();
 const port = 8000; 
-const app = express();
-
-// Middleware
-app.use(cors());
-app.use(express.json());
+const app= express();
 
 //Route à empreinter dans le navigateur
 app.get('/', (req, res) => {
@@ -59,3 +55,4 @@ app.put('/users/:id', (req, res) => {
         res.send('Classement modifié');
     });
 });
+

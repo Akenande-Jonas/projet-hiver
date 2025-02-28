@@ -23,8 +23,8 @@ app.listen(port, () => {
 //Connexion à la base de données
 const bddConnection = mysql.createConnection({
     host: '192.168.64.175',
-    user: 'site1',
-    password: 'yuzu007',
+    user: 'teddy',
+    password: 'TE42be98&*',
     database: 'Classement'
 });
 
@@ -68,3 +68,31 @@ app.delete('/users/:id', (req, res) => {
         res.send('Utilisateur supprimé de la base de données');
     });
 });
+
+// Requête SQL
+bddConnection.query('SELECT * FROM users', (err, results) => {
+    if (err) {
+      console.error('Erreur lors de l\'exécution de la requête :', err.stack);
+      return;
+    }
+    console.log('Résultats de la requête :', results);
+  });
+  
+  // Fermez la connexion (optionnel, selon votre cas d'usage)
+  bddConnection.end();
+
+const { Sequelize } = require('sequelize');
+
+const sequelize = new Sequelize('Classement', 'teddy', 'TE42be98&*', {
+  host: '192.168.64.175',
+  dialect: 'mysql'
+});
+
+// Testez la connexion
+sequelize.authenticate()
+  .then(() => {
+    console.log('Connexion à la base de données réussie !');
+  })
+  .catch((err) => {
+    console.error('Erreur de connexion à la base de données :', err);
+  });

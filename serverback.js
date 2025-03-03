@@ -3,8 +3,35 @@ const dotenv = require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql');
-const port = 8000; 
+const port = 8080; 
 const app = express();
+const WebSocket = require('ws');
+
+// Créez un serveur WebSocket sur le port 8080
+const wss = new WebSocket.Server({ port: 8080 });
+
+// Écoutez les connexions des clients
+wss.on('connection', (ws) => {
+    console.log('Un client est connecté !');
+
+    // Envoyez un message au client dès qu'il se connecte
+    ws.send('Bienvenue sur le serveur WebSocket !');
+
+    // Écoutez les messages envoyés par le client
+    ws.on('message', (message) => {
+        console.log(`Message reçu : ${message}`);
+
+        // Renvoyez le message au client
+        ws.send(`Vous avez dit : ${message}`);
+    });
+
+    // Gérez la fermeture de la connexion
+    ws.on('close', () => {
+        console.log('Le client s\'est déconnecté.');
+    });
+});
+
+console.log('Serveur WebSocket démarré sur ws://localhost:8080');
 
 // Middleware
 app.use(cors());

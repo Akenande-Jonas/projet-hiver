@@ -1,37 +1,61 @@
-//Déclaration de constantes & des paramètres de travail
+//Déclaration de constantes & des paramètres du serveur
 const dotenv = require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql');
-const port = 8080; 
+const port = 8000; 
 const app = express();
 const WebSocket = require('ws');
+
+// Connexion à la base de données MySQL
+const db = mysql.createConnection({
+    host: '192.168.64.175',
+    user: 'site1',
+    password: 'yuzu007',
+    database: 'connexion'
+});
+
+db.connect((err) => {
+    if (err) throw err;
+    console.log('Connecté à la base de données MySQL');
+});
 
 // Créez un serveur WebSocket sur le port 8080
 const wss = new WebSocket.Server({ port: 8080 });
 
-// Écoutez les connexions des clients
 wss.on('connection', (ws) => {
     console.log('Un client est connecté !');
 
-    // Envoyez un message au client dès qu'il se connecte
-    ws.send('Bienvenue sur le serveur WebSocket !');
+    // Envoyer les messages historiques au client
+    db.query('SELECT * FROM messages ORDER BY created_at DESC LIMIT 10', (err, results) => {
+        if (err) throw err;
+        ws.send(JSON.stringify({ type: 'history', data: results }));
+    });
 
-    // Écoutez les messages envoyés par le client
+    // Écouter les messages du client
     ws.on('message', (message) => {
         console.log(`Message reçu : ${message}`);
 
-        // Renvoyez le message au client
-        ws.send(`Vous avez dit : ${message}`);
+        // Insérer le message dans la base de données
+        db.query('INSERT INTO messages (content) VALUES (?)', [message], (err, results) => {
+            if (err) throw err;
+
+            // Renvoyer le message à tous les clients connectés
+            wss.clients.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify({ type: 'message', data: message }));
+                }
+            });
+        });
     });
 
-    // Gérez la fermeture de la connexion
+    // Gérer la déconnexion
     ws.on('close', () => {
         console.log('Le client s\'est déconnecté.');
     });
 });
 
-console.log('Serveur WebSocket démarré sur ws://localhost:8080');
+console.log('Serveur WebSocket démarré sur ws:192.168.64.175:8080');
 
 // Middleware
 app.use(cors());

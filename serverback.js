@@ -36,7 +36,22 @@ app.get('/accueil', (req, res) => {
 // route pour la page de classement
 app.get('/classement', (req, res) => {
 
-    const query = "SELECT m.id, m.Equipe1,  m.Equipe2, m.Gagnant, m.nul,   e1.nom AS nom_equipe1,   e2.nom AS nom_equipe2 FROM  Matchs m JOIN equipe e1 ON m.Equipe1 = e1.id JOIN equipe e2 ON m.Equipe2 = e2.id;";
+  const query = `
+  SELECT 
+      m.id, 
+      m.Equipe1, 
+      m.Equipe2, 
+      m.Butequipe1, 
+      m.Butequipe2, 
+      e1.nom AS nom_equipe1, 
+      e2.nom AS nom_equipe2
+  FROM 
+      Matchs m
+  JOIN 
+      equipe e1 ON m.Equipe1 = e1.id
+  JOIN 
+      equipe e2 ON m.Equipe2 = e2.id;
+`;
 
     bddConnection.query(query, (error, results, fields) => {
         if (error) throw error;
@@ -45,6 +60,7 @@ app.get('/classement', (req, res) => {
         const classement = calculerClassement(results);
       
         console.log(classement);
+        res.json(classement);
       });
 });
 // route pour la page users
@@ -104,40 +120,75 @@ bddConnection.query('SELECT * FROM users', (err, results) => {
   });
   
 
-
   function calculerClassement(matchs) {
     const classement = {};
   
     matchs.forEach(match => {
-      const { Equipe1, Equipe2, Gagnant, nul, nom_equipe1, nom_equipe2 } = match;
+      const { Equipe1, Equipe2, Butequipe1, Butequipe2, nom_equipe1, nom_equipe2 } = match;
   
       // Initialiser les équipes dans le classement si elles n'existent pas
       if (!classement[Equipe1]) {
-        classement[Equipe1] = { id: Equipe1, nom: nom_equipe1, points: 0 };
+        classement[Equipe1] = {
+          id: Equipe1,
+          nom: nom_equipe1,
+          matchsJoues: 0,
+          points: 0,
+          butsPour: 0,
+          butsContre: 0,
+          differenceButs: 0,
+        };
       }
       if (!classement[Equipe2]) {
-        classement[Equipe2] = { id: Equipe2, nom: nom_equipe2, points: 0 };
+        classement[Equipe2] = {
+          id: Equipe2,
+          nom: nom_equipe2,
+          matchsJoues: 0,
+          points: 0,
+          butsPour: 0,
+          butsContre: 0,
+          differenceButs: 0,
+        };
       }
   
-      // Gestion des matchs nuls
-      if (nul === 1) {
+      // Mettre à jour les statistiques pour chaque équipe
+      classement[Equipe1].matchsJoues += 1;
+      classement[Equipe2].matchsJoues += 1;
+  
+      classement[Equipe1].butsPour += Butequipe1;
+      classement[Equipe1].butsContre += Butequipe2;
+      classement[Equipe1].differenceButs = classement[Equipe1].butsPour - classement[Equipe1].butsContre;
+  
+      classement[Equipe2].butsPour += Butequipe2;
+      classement[Equipe2].butsContre += Butequipe1;
+      classement[Equipe2].differenceButs = classement[Equipe2].butsPour - classement[Equipe2].butsContre;
+  
+      // Déterminer le résultat du match
+      if (Butequipe1 > Butequipe2) {
+        // Équipe 1 gagne
+        classement[Equipe1].points += 3;
+      } else if (Butequipe2 > Butequipe1) {
+        // Équipe 2 gagne
+        classement[Equipe2].points += 3;
+      } else {
+        // Match nul
         classement[Equipe1].points += 1;
         classement[Equipe2].points += 1;
-      } else {
-        // Attribuer les points en fonction du gagnant
-        if (Gagnant === Equipe1) {
-          classement[Equipe1].points += 3;
-        } else if (Gagnant === Equipe2) {
-          classement[Equipe2].points += 3;
-        }
       }
     });
   
     // Convertir l'objet en tableau pour un classement plus lisible
     const classementArray = Object.values(classement);
   
-    // Trier le classement par points décroissants
-    classementArray.sort((a, b) => b.points - a.points);
+    // Trier le classement selon les critères
+    classementArray.sort((a, b) => {
+      if (b.points !== a.points) {
+        return b.points - a.points; // Tri par points décroissants
+      } else if (b.differenceButs !== a.differenceButs) {
+        return b.differenceButs - a.differenceButs; // Tri par différence de buts
+      } else {
+        return b.butsPour - a.butsPour; // Tri par buts pour
+      }
+    });
   
     return classementArray;
   }

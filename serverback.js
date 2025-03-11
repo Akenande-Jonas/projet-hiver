@@ -6,6 +6,15 @@ const mysql = require('mysql');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser'); // Ajout de cookie-parser
+const cooking = require('cooking');
+const { request } = require('http');
+const { response } = require('express');
+const { json } = require('express');
+const { urlencoded } = require('express');
+const { use } = require('express');
+const process = require('process');
+const { Console } = require('console');
+const { error } = require('console');
 const port = 9100; 
 const app = express();
 

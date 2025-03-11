@@ -5,13 +5,14 @@ const cors = require('cors');
 const mysql = require('mysql');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const cooking = require('cooking');
+const cookieParser = require('cookie-parser'); // Ajout de cookie-parser
 const port = 9100; 
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser()); // Utilisation de cookie-parser
 
 //Connexion à la base de données
 const bddConnection = mysql.createConnection({
@@ -28,8 +29,7 @@ bddConnection.connect(function (err) {
 
 // Middleware d'authentification
 function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const token = req.cookies.token; // Récupérer le token depuis les cookies
     if (token == null) return res.sendStatus(401);
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
@@ -64,6 +64,7 @@ app.post('/login', (req, res) => {
             if (await bcrypt.compare(password, rows[0].password)) {
                 const user = { name: username };
                 const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
+                res.cookie('token', accessToken, { httpOnly: true }); // Stocker le token dans un cookie
                 res.json({ accessToken: accessToken });
             } else {
                 res.send('Mot de passe incorrect');
